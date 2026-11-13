@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: demo-api-quality
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  args:
+  - name: canary-hash
+  metrics:
+  - name: minimum-requests
+    interval: 60s
+    count: 3
+    inconclusiveLimit: 2
+    successCondition: len(result) == 1 && result[0] >= 20
+    failureCondition: 'false'
+    provider:
+      prometheus:
+        address: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
+        query: sum(increase(http_server_requests_seconds_count{namespace="demo-prod",rollouts_pod_template_hash="{{args.canary-hash}}",uri="/api/greeting"}[2m]))
+          or vector(0)
+  - name: error-ratio
+    interval: 60s
+    count: 3
+    failureLimit: 1
+    successCondition: len(result) == 1 && result[0] <= 0.01
+    failureCondition: len(result) != 1 || result[0] > 0.01
+    provider:
+      prometheus:
+        address: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
+        query: (sum(rate(http_server_requests_seconds_count{namespace="demo-prod",rollouts_pod_template_hash="{{args.canary-hash}}",uri="/api/greeting",status=~"5.."}[2m]))
+          or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{namespace="demo-prod",rollouts_pod_template_hash="{{args.canary-hash}}",uri="/api/greeting"}[2m])),
+          0.001)

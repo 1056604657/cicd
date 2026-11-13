@@ -1,0 +1,25 @@
+# Select a real storage class and capacity before production installation.
+prometheus:
+  prometheusSpec:
+    replicas: 2
+    retention: 15d
+    serviceMonitorSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    serviceMonitorNamespaceSelector: {}
+    ruleSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    podMonitorNamespaceSelector: {}
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 50Gi
+alertmanager:
+  alertmanagerSpec:
+    replicas: 3
+grafana:
+  enabled: false

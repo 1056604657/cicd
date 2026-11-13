@@ -1,0 +1,21 @@
+# istio/gateway chart, installed as istio-ingressgateway in istio-ingress.
+name: istio-ingressgateway
+labels:
+  istio: ingressgateway
+serviceAccount:
+  create: true
+  name: istio-ingressgateway
+replicaCount: 3
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "2"
+    memory: 1Gi
+service:
+  type: LoadBalancer

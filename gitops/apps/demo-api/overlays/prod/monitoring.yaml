@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-api-metrics
+  labels:
+    app.kubernetes.io/name: demo-api
+    monitoring: demo-api
+spec:
+  selector:
+    app.kubernetes.io/name: demo-api
+  ports:
+  - name: management
+    port: 8081
+    targetPort: management
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: demo-api
+  labels:
+    app.kubernetes.io/name: demo-api
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      monitoring: demo-api
+  endpoints:
+  - port: management
+    path: /actuator/prometheus
+    interval: 30s
+  podTargetLabels:
+  - rollouts-pod-template-hash
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-api
+  labels:
+    app.kubernetes.io/name: demo-api
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: demo-api
+    rules:
+    - alert: DemoApiUnavailable
+      expr: sum(kube_pod_status_ready{namespace="demo-prod",condition="true",pod=~"demo-api-.*"})
+        < 2
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: demo-api production available replicas below 2
+    - alert: DemoApiHighErrorRate
+      expr: sum(rate(http_server_requests_seconds_count{namespace="demo-prod",status=~"5.."}[5m]))
+        / clamp_min(sum(rate(http_server_requests_seconds_count{namespace="demo-prod"}[5m])),
+        0.01) > 0.01
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: demo-api production HTTP 5xx exceeds 1%

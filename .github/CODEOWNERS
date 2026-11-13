@@ -1,0 +1,10 @@
+# Repository owner is an initial reviewer; replace with real teams before organization rollout.
+* @1056604657
+/Jenkinsfile @1056604657
+/jenkins/ @1056604657
+/scripts/ @1056604657
+/ci/ @1056604657
+/gitops/apps/demo-api/overlays/prod/ @1056604657
+/argocd/ @1056604657
+/platform/ @1056604657
+/.github/ @1056604657

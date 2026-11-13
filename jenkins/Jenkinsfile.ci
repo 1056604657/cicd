@@ -1,0 +1,3 @@
+@Library('platform-ci') _
+// Untrusted PR checks: job has NO publish credentials and uses a separate agent pool.
+javaServicePipeline(mode: 'check')

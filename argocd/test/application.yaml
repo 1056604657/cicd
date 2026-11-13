@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-api-test
+  labels:
+    app.kubernetes.io/name: demo-api
+  namespace: argocd
+spec:
+  project: demo-test
+  source:
+    repoURL: https://github.com/1056604657/cicd.git
+    targetRevision: main
+    path: gitops/apps/demo-api/overlays/test
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo-test
+  revisionHistoryLimit: 10
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=false
+    - PruneLast=true
+    - RespectIgnoreDifferences=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 2m

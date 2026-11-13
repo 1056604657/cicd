@@ -1,0 +1,14 @@
+meshConfig:
+  accessLogFile: /dev/stdout
+  accessLogEncoding: JSON
+  defaultConfig:
+    holdApplicationUntilProxyStarts: true
+    terminationDrainDuration: 30s
+pilot:
+  autoscaleEnabled: true
+  autoscaleMin: 3
+  autoscaleMax: 5
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi

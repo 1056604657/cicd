@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-api
+spec:
+  template:
+    metadata:
+      labels:
+        environment: test
+      annotations:
+        delivery.example.com/image-digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+        proxy.istio.io/config: '{"holdApplicationUntilProxyStarts":true,"terminationDrainDuration":"30s"}'
+    spec:
+      containers:
+      - name: app
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: '1'
+            memory: 768Mi
+      terminationGracePeriodSeconds: 75

@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: demo-test
+  labels:
+    app.kubernetes.io/name: demo-api
+  namespace: argocd
+spec:
+  description: demo-api test delivery boundary
+  sourceRepos:
+  - https://github.com/1056604657/cicd.git
+  destinations:
+  - server: https://kubernetes.default.svc
+    namespace: demo-test
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: ServiceAccount
+  - group: ''
+    kind: ConfigMap
+  - group: apps
+    kind: Deployment
+  - group: networking.k8s.io
+    kind: NetworkPolicy
+  - group: networking.istio.io
+    kind: VirtualService
+  - group: networking.istio.io
+    kind: DestinationRule
+  - group: security.istio.io
+    kind: PeerAuthentication
+  - group: security.istio.io
+    kind: AuthorizationPolicy
+  - group: autoscaling
+    kind: HorizontalPodAutoscaler
+  - group: policy
+    kind: PodDisruptionBudget
+  - group: monitoring.coreos.com
+    kind: ServiceMonitor
+  - group: monitoring.coreos.com
+    kind: PrometheusRule
+  - group: argoproj.io
+    kind: Rollout
+  - group: argoproj.io
+    kind: AnalysisTemplate
+  orphanedResources:
+    warn: true
+  roles:
+  - name: observer
+    description: Read-only release observation
+    policies:
+    - p, proj:demo-test:observer, applications, get, demo-test/*, allow

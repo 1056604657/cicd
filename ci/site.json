@@ -1,0 +1,9 @@
+{
+  "repository": "1056604657/cicd",
+  "gitopsBranch": "main",
+  "imageRepository": "harbor.example.com/business/demo-api",
+  "runtimeImage": "harbor.example.com/base/eclipse-temurin:21-jre@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "argocdTestUrl": "https://argocd-test.example.com",
+  "testUrl": "https://demo-test.example.com",
+  "prodUrl": "https://demo-prod.example.com"
+}

@@ -1,0 +1,137 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: demo-api
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  hosts:
+  - demo-prod.example.com
+  gateways:
+  - istio-ingress/demo-prod
+  http:
+  - name: primary
+    match:
+    - uri:
+        prefix: /api/
+    timeout: 10s
+    route:
+    - destination:
+        host: demo-api
+        port:
+          number: 80
+      weight: 100
+    - destination:
+        host: demo-api-canary
+        port:
+          number: 80
+      weight: 0
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: demo-api
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  host: demo-api
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: demo-api
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demo-api
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    '8081':
+      mode: DISABLE
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: demo-api
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demo-api
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/istio-ingress/sa/istio-ingressgateway
+    to:
+    - operation:
+        ports:
+        - '8080'
+        methods:
+        - GET
+        paths:
+        - /api/*
+  - to:
+    - operation:
+        ports:
+        - '8081'
+        methods:
+        - GET
+        paths:
+        - /actuator/prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-api-canary
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  selector:
+    app.kubernetes.io/name: demo-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: demo-api-canary
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  host: demo-api-canary
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50

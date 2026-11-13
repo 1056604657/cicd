@@ -1,0 +1,27 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: demo-prod
+  labels:
+    app.kubernetes.io/name: demo-api
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - demo-prod/demo-prod.example.com
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - demo-prod/demo-prod.example.com
+    tls:
+      mode: SIMPLE
+      credentialName: demo-prod-tls

@@ -1,0 +1,15 @@
+**/target/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+.work/
+artifacts/
+*.kubeconfig
+
+*.key
+*.pem
+jenkins/agent/bin/*
+!jenkins/agent/bin/.gitkeep

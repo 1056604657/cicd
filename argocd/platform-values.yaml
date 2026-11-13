@@ -1,0 +1,37 @@
+# Merge with your pinned argo-cd Helm chart values; configure SSO before production.
+configs:
+  cm:
+    admin.enabled: "false"
+    accounts.jenkins-observer: apiKey
+    resource.customizations.health.argoproj.io_Rollout: |
+      hs = {status = "Progressing", message = "Waiting for Rollout status"}
+      if obj.status ~= nil then
+        if obj.status.phase == "Healthy" then
+          hs.status = "Healthy"
+        elseif obj.status.phase == "Degraded" then
+          hs.status = "Degraded"
+        elseif obj.status.phase == "Paused" then
+          hs.status = "Suspended"
+        end
+        hs.message = obj.status.message or obj.status.phase or hs.message
+      end
+      return hs
+  rbac:
+    policy.default: ''
+    policy.csv: |
+      p, role:jenkins-observer, applications, get, demo-test/demo-api-test, allow
+      g, jenkins-observer, role:jenkins-observer
+      p, role:platform-operator, applications, get, */*, allow
+      p, role:platform-operator, applications, sync, demo-prod/*, allow
+      p, role:platform-operator, applications, action/argoproj.io/Rollout/*, demo-prod/*, allow
+      g, platform-operators, role:platform-operator
+controller:
+  replicas: 2
+repoServer:
+  replicas: 2
+server:
+  replicas: 2
+redis-ha:
+  enabled: true
+redis:
+  enabled: false

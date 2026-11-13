@@ -1,0 +1,61 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: demo-prod-image-trust
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookConfiguration:
+    failurePolicy: Fail
+    timeoutSeconds: 30
+  rules:
+  - name: require-approved-app-image
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaces:
+          - demo-prod
+    validate:
+      message: The app container must use the approved immutable image repository
+      pattern:
+        spec:
+          containers:
+          - name: app
+            image: harbor.example.com/business/demo-api@sha256:*
+  - name: require-signed-tested-image
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaces:
+          - demo-prod
+    verifyImages:
+    - imageReferences:
+      - harbor.example.com/business/demo-api*
+      required: true
+      mutateDigest: false
+      verifyDigest: true
+      attestors:
+      - entries:
+        - keys:
+            publicKeys: REPLACE_WITH_BUILD_PUBLIC_KEY
+      attestations:
+      - predicateType: https://delivery.example.com/attestations/test/v1
+        attestors:
+        - entries:
+          - keys:
+              publicKeys: REPLACE_WITH_TEST_PUBLIC_KEY
+        conditions:
+        - all:
+          - key: '{{ environment }}'
+            operator: Equals
+            value: test
+          - key: '{{ checks.argocdHealthy }}'
+            operator: Equals
+            value: true
+          - key: '{{ checks.smokePassed }}'
+            operator: Equals
+            value: true
